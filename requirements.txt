@@ -5,3 +5,4 @@ openai
 langserve[all]
 langchain-community
 upstash-vector
+jupyter
