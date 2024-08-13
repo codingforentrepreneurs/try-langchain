@@ -6,3 +6,4 @@ langserve[all]
 langchain-community
 upstash-vector
 jupyter
+tiktoken
