@@ -10,6 +10,11 @@ def home_page():
 
 chain = helpers.get_chain()
 
+# /chain/playground/
+# /chain/invoke
+# /chain/stream
+# /chain/batch
+
 add_routes(
     app,
     chain,
