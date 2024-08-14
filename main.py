@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from langserve import add_routes # fastapi
 import helpers
 from decouple import config
@@ -12,21 +13,30 @@ redis_instance = Redis(
   ssl=True
 )
 
-@app.get('/')
-def home_page():
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    rate_limit = 5
+    rate_window = 10 # seconds
     visits_key = "visits"
-    max_requests = 5
     current_val = redis_instance.get(visits_key)
     if current_val is None:
-        redis_instance.set(visits_key, 0, 10)
+        redis_instance.set(visits_key, 0, rate_window)
     redis_instance.incr(visits_key)
     final_val = redis_instance.get(visits_key)
     do_rate_limiting = False 
     try:
-        do_rate_limiting = int(final_val) > max_requests
+        do_rate_limiting = int(final_val) > rate_limit
     except:
         pass
-    return {"hello": "world", "visits": final_val, "limited": do_rate_limiting}
+    if do_rate_limiting:
+        return JSONResponse(content={"error": "Rate Limited"},status_code=429)
+    response = await call_next(request)
+    return response
+
+@app.get('/')
+def home_page():
+    
+    return {"hello": "world"}
 
 chain = helpers.get_chain()
 
